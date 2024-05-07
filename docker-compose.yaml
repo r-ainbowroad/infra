@@ -1,0 +1,90 @@
+version: '3.7'
+
+volumes:
+  # traefik requires that acme.json has 600 perms, but when using WSL on NTFS
+  # this isn't possible. Use a docker volume for acme to avoid this.
+  acme:
+
+services:
+  traefik:
+    image: traefik:v2.11
+    command:
+      - "--configFile=/config/traefik.toml"
+    environment:
+      CF_DNS_API_TOKEN: ${CF_DNS_API_TOKEN}
+      LEGO_DISABLE_CNAME_SUPPORT: true
+    ports:
+      # The HTTP port
+      - "127.0.0.1:80:80"
+      - "127.0.0.1:443:443"
+      # The Web UI (enabled by --api.insecure=true)
+      - "127.0.0.1:8080:8080"
+      - "127.0.0.1:18083:18083"
+      # mqtt
+      #- "127.0.0.1:1883:1883"
+      - "127.0.0.1:8083:8083"
+      # minio
+      - "127.0.0.1:9000:9000"
+    volumes:
+      # So that Traefik can listen to the Docker events
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - acme:/letsencrypt
+      - .persistent/traefik/logs:/var/log/traefik
+      - ./traefik.toml:/config/traefik.toml
+
+  emqx:
+    image: emqx:5.6
+    environment:
+      EMQX_NAME: mqtt
+      EMQX_HOST: localhost
+      # In rare cases we may send very large updates.
+      EMQX_mqtt__max_packet_size: 10MB
+      EMQX_mqtt__idle_timeout: 80s
+      EMQX_dashboard__default_password: ${EMQX_DASHBOARD__DEFAULT_PASSWORD}
+      EMQX_authentication__1__backend: built_in_database
+      EMQX_authentication__1__mechanism: password_based
+      EMQX_authentication__1__password_hash_algorithm: "{name = pbkdf2, mac_fun = sha256, iterations = 4096}"
+      EMQX_authentication__1__user_id_type: username
+    ports:
+      - "127.0.0.1:1883:1883"
+    labels:
+      - "traefik.enable=true"
+      # Web admin
+      - "traefik.http.routers.emqx-admin.service=emqx-admin"
+      - "traefik.http.routers.emqx-admin.rule=Host(`localhost`)"
+      - "traefik.http.routers.emqx-admin.entrypoints=emqx-admin"
+      - "traefik.http.services.emqx-admin.loadbalancer.server.port=18083"
+      # mqtt
+      #- "traefik.tcp.routers.mqtt.service=mqtt"
+      #- "traefik.tcp.routers.mqtt.rule=HostSNI(`*`)"
+      #- "traefik.tcp.routers.mqtt.entrypoints=mqtt"
+      #- "traefik.tcp.services.mqtt.loadbalancer.server.port=1883"
+      # ws
+      - "traefik.http.routers.ws.service=ws"
+      - "traefik.http.routers.ws.rule=Host(`realtime.minimap.${BASE_DOMAIN}`)"
+      - "traefik.http.routers.ws.entrypoints=websecure"
+      - "traefik.http.routers.ws.tls.certresolver=dns"
+      - "traefik.http.services.ws.loadbalancer.server.port=8083"
+    volumes:
+      - .persistent/emqx/log:/opt/emqx/log
+      - .persistent/emqx/data:/opt/emqx/data
+
+  minio:
+    image: minio/minio
+    command: server --console-address ":9001" /data/minio
+    environment:
+      MINIO_CONFIG_ENV_FILE: /etc/config.env
+      MINIO_STORAGE_USE_HTTPS: False
+    ports:
+      - 9001:9001
+    labels:
+      - "traefik.enable=true"
+      # Web admin
+      - "traefik.http.routers.minio-api.service=minio-api"
+      - "traefik.http.routers.minio-api.rule=Host(`cdn.minimap.${BASE_DOMAIN}`)"
+      - "traefik.http.routers.minio-api.entrypoints=websecure"
+      - "traefik.http.routers.minio-api.tls.certresolver=dns"
+      - "traefik.http.services.minio-api.loadbalancer.server.port=9000"
+    volumes:
+      - .persistent/minio/data:/data/minio
+      - .persistent/minio/config.env:/etc/config.env
