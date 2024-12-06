@@ -35,7 +35,7 @@ services:
       - ./traefik.toml:/config/traefik.toml
 
   emqx:
-    image: emqx:5.6
+    image: emqx:5.8
     environment:
       EMQX_NAME: mqtt
       EMQX_HOST: localhost
