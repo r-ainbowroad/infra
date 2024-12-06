@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: Apache-2.0 OR ISC
+# SPDX-FileCopyrightText: 2024 Dusk Banks <me@bb010g.com>
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../base
+  # - cluster-api.yaml

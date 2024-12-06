@@ -1,0 +1,234 @@
+# SPDX-License-Identifier: Apache-2.0 OR ISC
+# SPDX-FileCopyrightText: 2024 Dusk Banks <me@bb010g.com>
+apiVersion: cluster.x-k8s.io/v1beta1
+kind: Cluster
+metadata:
+  name: r-ainbowroad
+  namespace: default
+spec:
+  infrastructureRef:
+    apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+    kind: HetznerCluster
+    name: r-ainbowroad
+  controlPlaneRef:
+    apiVersion: controlplane.cluster.x-k8s.io/v1alpha3
+    kind: TalosControlPlane
+    name: r-ainbowroad-control-plane
+  clusterNetwork:
+    serviceDomain: &clusterDnsDomain r-ainbowroad.local
+    pods:
+      cidrBlocks: &clusterPodSubnets
+        - 10.244.0.0/16
+    services:
+      cidrBlocks: &clusterServiceSubnets
+        - 10.96.0.0/12
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+kind: HetznerCluster
+metadata:
+  name: r-ainbowroad
+  namespace: default
+spec:
+  controlPlaneRegions:
+    - nbg1
+  hcloudNetwork:
+    enabled: false
+  controlPlaneLoadBalancer:
+    enabled: false
+  hcloudPlacementGroups:
+  - name: r-ainbowroad-control-plane
+    type: spread
+  - name: r-ainbowroad-worker
+    type: spread
+  hetznerSecretRef:
+    name: hetzner-r-ainbowroad
+    key:
+      hcloudToken: HCLOUD_TOKEN
+  sshKeys:
+    hcloud:
+    - name: me@bb010g.com
+---
+apiVersion: cluster.x-k8s.io/v1beta1
+kind: MachineDeployment
+metadata:
+  name: r-ainbowroad-worker
+  namespace: default
+  labels:
+    nodepool: r-ainbowroad-worker
+spec:
+  clusterName: r-ainbowroad
+  replicas: 1
+  selector:
+    matchLabels: null
+  template:
+    metadata:
+      labels:
+        nodepool: r-ainbowroad-worker
+    spec:
+      clusterName: r-ainbowroad
+      version: v1.30.1
+      failureDomain: nbg1
+      infrastructureRef:
+        apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+        kind: HCloudMachineTemplate
+        name: r-ainbowroad-worker
+      bootstrap:
+        configRef:
+          apiVersion: bootstrap.cluster.x-k8s.io/v1alpha3
+          kind: TalosConfigTemplate
+          name: r-ainbowroad-worker
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+kind: HCloudMachineTemplate
+metadata:
+  name: r-ainbowroad-control-plane
+  namespace: default
+spec:
+  template:
+    spec:
+      type: cx22
+      imageName: talos-hcloud-v1.7.0 # snapshot
+      placementGroupName: r-ainbowroad-control-plane
+---
+apiVersion: controlplane.cluster.x-k8s.io/v1alpha3
+kind: TalosControlPlane
+metadata:
+  name: r-ainbowroad-control-plane
+  namespace: default
+spec:
+  version: v1.30.1
+  replicas: 3
+  rolloutStrategy:
+    type: RollingUpdate
+  infrastructureTemplate:
+    apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+    kind: HCloudMachineTemplate
+    name: r-ainbowroad-control-plane
+  controlPlaneConfig:
+    controlplane:
+      generateType: controlplane
+      talosVersion: &talosVersion v1.7.5
+      configPatches:
+        # External cloud provider configuration.
+        - op: replace
+          path: /cluster/externalCloudProvider
+          value:
+            enabled: true # Enable external cloud provider.
+        - op: replace
+          path: /cluster/network/dnsDomain
+          value: *clusterDnsDomain
+        - op: replace
+          path: /cluster/network/podSubnets
+          value: *clusterPodSubnets
+        - op: replace
+          path: /cluster/network/serviceSubnets
+          value: *clusterServiceSubnets
+        - op: replace
+          path: /machine/ca/crt
+          value: SECRET # TODO(me@bb010g.com): sops
+        - op: replace
+          path: /machine/ca/key
+          value: SECRET # TODO(me@bb010g.com): sops
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+kind: HCloudMachineTemplate
+metadata:
+  name: r-ainbowroad-worker
+  namespace: default
+spec:
+  template:
+    spec:
+      type: cx32
+      imageName: talos-hcloud-v1.7.0 # snapshot
+      placementGroupName: r-ainbowroad-worker
+---
+apiVersion: bootstrap.cluster.x-k8s.io/v1alpha3
+kind: TalosConfigTemplate
+metadata:
+  name: r-ainbowroad-worker
+  namespace: default
+spec:
+  template:
+    spec:
+      generateType: worker
+      talosVersion: &talosVersion
+      configPatches:
+        # External cloud provider configuration.
+        - op: replace
+          path: /cluster/externalCloudProvider
+          value:
+            enabled: true # Enable external cloud provider.
+---
+apiVersion: cluster.x-k8s.io/v1beta1
+kind: MachineHealthCheck
+metadata:
+  name: r-ainbowroad-control-plane-unhealthy-5m
+  namespace: default
+spec:
+  clusterName: r-ainbowroad
+  maxUnhealthy: 100%
+  nodeStartupTimeout: 15m
+  remediationTemplate:
+    apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+    kind: HCloudRemediationTemplate
+    name: r-ainbowroad-control-plane-remediation-request
+  selector:
+    matchLabels:
+      cluster.x-k8s.io/control-plane: ""
+  unhealthyConditions:
+  - status: Unknown
+    timeout: 180s
+    type: Ready
+  - status: "False"
+    timeout: 180s
+    type: Ready
+---
+apiVersion: cluster.x-k8s.io/v1beta1
+kind: MachineHealthCheck
+metadata:
+  name: r-ainbowroad-worker-unhealthy-5m
+  namespace: default
+spec:
+  clusterName: r-ainbowroad
+  maxUnhealthy: 100%
+  nodeStartupTimeout: 10m
+  remediationTemplate:
+    apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+    kind: HCloudRemediationTemplate
+    name: r-ainbowroad-worker-remediation-request
+  selector:
+    matchLabels:
+      nodepool: r-ainbowroad-worker
+  unhealthyConditions:
+  - status: Unknown
+    timeout: 180s
+    type: Ready
+  - status: "False"
+    timeout: 180s
+    type: Ready
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+kind: HCloudRemediationTemplate
+metadata:
+  name: r-ainbowroad-control-plane-remediation-request
+  namespace: default
+spec:
+  template:
+    spec:
+      strategy:
+        retryLimit: 1
+        timeout: 180s
+        type: Reboot
+---
+apiVersion: infrastructure.cluster.x-k8s.io/v1beta1
+kind: HCloudRemediationTemplate
+metadata:
+  name: r-ainbowroad-worker-remediation-request
+  namespace: default
+spec:
+  template:
+    spec:
+      strategy:
+        retryLimit: 1
+        timeout: 180s
+        type: Reboot

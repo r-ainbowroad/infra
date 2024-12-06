@@ -1,0 +1,20 @@
+# SPDX-FileCopyrightText: NONE
+# SPDX-License-Identifier: 0BSD
+
+version = 1
+SPDX-PackageName = "r-ainbowroad-infrastructure"
+SPDX-PackageSupplier = "Person: Dusk Banks (me@bb010g.com)"
+SPDX-PackageDownloadLocation = "git+https://github.com/r-ainbowroad/infra.git"
+SPDX-PackageHomePage = "https://github.com/r-ainbowroad/infra"
+SPDX-PackageSummary = "r/ainbowroad infrastructure"
+
+[[annotations]]
+path = "**/flake.lock"
+SPDX-FileCopyrightText = "NONE"
+SPDX-License-Identifier = "0BSD"
+
+[[annotations]]
+path = ["kubeconfig", "secrets/**.env", "secrets/**.ini", "secrets/**.json", "secrets/**.yaml"]
+precedence = "aggregate"
+SPDX-FileCopyrightText = "ⓒ 2024 r/ainbowroad contributors"
+SPDX-License-Identifier = "Apache-2.0 OR ISC"

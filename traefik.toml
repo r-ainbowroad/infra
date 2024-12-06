@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0 OR ISC
+# SPDX-FileCopyrightText: 2024 r/ainbowroad contributors
 api.insecure=true
 providers.docker=true
 acme.acmeLogging = true

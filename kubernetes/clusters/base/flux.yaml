@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: Apache-2.0 OR ISC
+# SPDX-FileCopyrightText: 2024 Dusk Banks <me@bb010g.com>
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: flux-system
+  labels:
+    app.kubernetes.io/instance: flux-system
+    app.kubernetes.io/part-of: flux
+    pod-security.kubernetes.io/warn: restricted
+    pod-security.kubernetes.io/warn-version: latest
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: fluxcd-community
+  namespace: flux-system
+spec:
+  interval: 1h
+  url: https://fluxcd-community.github.io/helm-charts
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: flux2
+  namespace: flux-system
+spec:
+  interval: 1h
+  chart:
+    spec:
+      chart: flux2
+      sourceRef:
+        kind: HelmRepository
+        name: fluxcd-community
+        namespace: flux-system
+      version: 2.13.0

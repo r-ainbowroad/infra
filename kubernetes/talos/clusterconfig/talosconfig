@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: Apache-2.0 OR ISC
+# SPDX-FileCopyrightText: 2024 Dusk Banks <me@bb010g.com>
+context: r-ainbowroad
+contexts:
+    r-ainbowroad:
+        endpoints:
+            - cluster.brony.place
+        nodes:
+            - 2a01:4f8:1c1b:7a36::1 # talos-control-node-1
+            - 2a01:4f8:c2c:25a::1 # talos-control-node-2
+            - 2a01:4f8:1c0c:5ac5::1 # talos-control-node-3
+            - 2a01:4f8:c0c:ccf8::1 # talos-worker-1
+        ca: SECRET
+        crt: SECRET
+        key: SECRET
+# vim:ft=yaml

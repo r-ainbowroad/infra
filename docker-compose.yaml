@@ -1,3 +1,5 @@
+# SPDX-License-Identifier: Apache-2.0 OR ISC
+# SPDX-FileCopyrightText: 2024 r/ainbowroad contributors
 version: '3.7'
 
 volumes:

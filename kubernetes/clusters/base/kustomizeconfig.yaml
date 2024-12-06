@@ -1,0 +1,13 @@
+# SPDX-License-Identifier: Apache-2.0 OR ISC
+# SPDX-FileCopyrightText: 2024 Dusk Banks <me@bb010g.com>
+nameReference:
+  - kind: ConfigMap
+    version: v1
+    fieldSpecs:
+      - kind: HelmRelease
+        path: spec/valuesFrom/name
+  - kind: HelmRepository
+    version: v1
+    fieldSpecs:
+      - kind: HelmRelease
+        path: spec/chart/spec/sourceRef/name

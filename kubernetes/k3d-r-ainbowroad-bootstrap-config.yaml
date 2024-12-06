@@ -1,0 +1,49 @@
+# SPDX-License-Identifier: Apache-2.0 OR ISC
+# SPDX-FileCopyrightText: 2024 Dusk Banks <me@bb010g.com>
+apiVersion: k3d.io/v1alpha5
+kind: Simple
+metadata:
+  name: r-ainbowroad-bootstrap
+servers: 1
+agents: 0
+kubeAPI: {}
+  # host: "localhost"
+  # hostIP: "127.0.0.1" # where the Kubernetes API will be listening on
+  # hostPort: "6445" # where the Kubernetes API listening port will be mapped to on your host system
+image: rancher/k3s:v1.30.1-k3s1
+volumes: []
+  # - volume: /my/host/path:/path/in/node
+  #   nodeFilters:
+  #     - server:0
+  #     - agent:*
+ports: []
+  # - port: 8080:80 # same as `--port '8080:80@loadbalancer'`
+  #   nodeFilters:
+  #     - loadbalancer
+env: []
+  # - envVar: bar=baz # same as `--env 'bar=baz@server:0'`
+  #   nodeFilters:
+  #     - server:0
+registries: {}
+  # create:
+  #   name: r-ainbowroad-bootstrap-registry
+  #   network: k3d-r-ainbowroad-bootstrap # TODO(me@bb010g.com)
+hostAliases: []
+  # - ip: 1.1.1.1
+  #   hostnames:
+  #     - cloud.flare.dns
+options:
+  k3d: # k3d runtime settings
+    wait: true # wait for cluster to be usable before returining
+    timeout: "60s" # wait timeout before aborting
+    disableLoadbalancer: true
+    disableImageVolume: false
+    disableRollback: false
+  k3s: # options passed on to K3s itself
+    extraArgs: # additional arguments passed to the `k3s server|agent` command
+      - arg: --kubelet-arg=feature-gates=KubeletInUserNamespace=true
+        nodeFilters:
+          - server:*
+  kubeconfig:
+    updateDefaultKubeconfig: true # add new cluster to your default Kubeconfig
+    switchCurrentContext: true # also set current-context to the new cluster's context

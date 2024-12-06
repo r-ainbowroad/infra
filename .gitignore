@@ -1,2 +1,14 @@
+# SPDX-License-Identifier: 0BSD
+# SPDX-FileCopyrightText: ⓒ 2024 r/ainbowroad contributors
+
 .persistent/
 .env
+
+# Nix
+/result*
+
+# pre-commit
+/.pre-commit-config.yaml
+
+# Talos
+talos/clusterconfig/

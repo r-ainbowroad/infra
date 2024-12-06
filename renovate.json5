@@ -1,0 +1,25 @@
+// SPDX-License-Identifier: 0BSD
+// SPDX-FileCopyrightText: 2024 r/ainbowroad contributors
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "fileMatch": ["(^|/)\\.envrc$"],
+      "matchStringsStrategy": "any",
+      "matchStrings": [
+        // https://github.com/renovatebot/renovate/blob/HEAD/lib/modules/manager/custom/regex/utils.ts
+        "# renovate:(?:\\s+(?:depName=(?<depName>.+?)|packageName=(?<packageName>.+?)|datasource=(?<datasource>.+?)|versioning=(?<versioning>.+?)|extractVersion=(?<extractVersion>.+?)|registryUrl=(?<registryUrl>.+?)|depType=(?<depType>.+?)))+\\n[^\\n]+[^a-z_]nix_direnv_version\\s+(?<currentValue>[^ });]+?);",
+      ],
+    }
+  ],
+  "nix": {
+    // https://github.com/renovatebot/renovate/issues/29721
+    "enabled": false,
+  },
+  "pre-commit": {
+    "enabled": false,
+  },
+}

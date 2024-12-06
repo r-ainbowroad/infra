@@ -1,0 +1,38 @@
+# SPDX-License-Identifier: Apache-2.0 OR ISC
+# SPDX-FileCopyrightText: 2024 Dusk Banks <me@bb010g.com>
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cluster-api-system
+---
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: cluster-api-operator
+  namespace: cluster-api-system
+spec:
+  interval: 1h
+  url: https://kubernetes-sigs.github.io/cluster-api-operator
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: cluster-api-operator
+  namespace: cluster-api-system
+spec:
+  interval: 1h
+  chart:
+    spec:
+      chart: cluster-api-operator
+      sourceRef:
+        kind: HelmRepository
+        name: cluster-api-operator
+        namespace: cluster-api-system
+      version: 0.11.0
+  dependsOn:
+    - name: cert-manager
+      namespace: cert-manager
+  values:
+    bootstrap: "talos:v0.6.5"
+    control-plane: "talos:v0.5.6"
+    infrastructure: "hetzner:v1.0.0-beta.37"

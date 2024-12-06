@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: 0BSD
+# SPDX-FileCopyrightText: ⓒ 2024 r/ainbowroad contributors
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+tab_width = 8
+
+[*.md]
+indent_size = 2
+indent_style = space
+trim_trailing_whitespace = true
+
+[*.jq]
+indent_size = 2
+indent_style = space
+trim_trailing_whitespace = true
+
+[*.json]
+indent_size = 2
+indent_style = space
+trim_trailing_whitespace = true
+
+[*.json5]
+indent_size = 2
+indent_style = space
+trim_trailing_whitespace = true
+
+[*.nix]
+charset = utf-8
+end_of_line = lf
+indent_size = 2
+indent_style = space
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[dep5]
+indent_size = 2
+indent_style = space
+trim_trailing_whitespace = true

@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: 0BSD
+# SPDX-FileCopyrightText: ⓒ 2024 r/ainbowroad contributors
+keys:
+- &admin_bb010g 'age1x0rd45hahmzw5lq5z89grnv8wmg77mes26f0hnk3fslz0urvfefs70ug50'
+- &admin_fluttershydev 'age1rynw8zglmazrftdqckn0rgluc2ec4mqjyfpjk3z99299yd2ea9uqtpm7vn'
+creation_rules:
+- path_regex: '(?:^|/)(?:secrets/[^/]+\.bb010g\.(?:env|ini|json|yaml))$'
+  key_groups:
+  - age:
+    - *admin_bb010g
+- path_regex: '(?:^|/)(?:secrets/[^/]+\.fluttershydev\.(?:env|ini|json|yaml))$'
+  key_groups:
+  - age:
+    - *admin_fluttershydev
+- path_regex: '(?:^|/)(?:secrets/[^/]+\.(?:env|ini|json|yaml))$'
+  key_groups:
+  - age:
+    - *admin_bb010g
+    - *admin_fluttershydev
